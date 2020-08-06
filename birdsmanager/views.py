@@ -18,16 +18,16 @@ class BirdsView(APIView):
 
         if 'attribute' and 'order' in request.query_params:
             order = '-' if request.query_params['order'] == 'desc' else ''
-            if limit > 0:
+            if limit >= 0:
                 serializer = BirdsSerializer(Bird.objects.order_by(order + request.query_params['attribute'])[offset:offset+limit], many=True)
             else:
                 serializer = BirdsSerializer(Bird.objects.order_by(order + request.query_params['attribute'])[offset:], many=True)
             return Response(serializer.data)
 
-        if limit > 0:
-            serializer = BirdsSerializer(Bird.objects.all()[offset:], many=True)
-        else:
+        if limit >= 0:
             serializer = BirdsSerializer(Bird.objects.all()[offset:offset+limit], many=True)
+        else:
+            serializer = BirdsSerializer(Bird.objects.all()[offset:], many=True)
 
         return Response(serializer.data)
 
