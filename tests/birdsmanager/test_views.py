@@ -1,6 +1,8 @@
 import os, sys
 from unittest.mock import patch
 
+from rest_framework import status
+
 sys.path.append(os.getcwd())
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Birds.settings")  # or whatever
 import django
@@ -8,7 +10,7 @@ import django
 django.setup()
 
 from unittest import TestCase
-from django.http import HttpRequest
+from django.http import HttpRequest, QueryDict
 from rest_framework.request import Request
 from birdsmanager.models import Bird
 from birdsmanager.views import BirdsView
@@ -17,6 +19,7 @@ from birdsmanager.serializers import BirdsSerializer
 
 def mock_save():
     pass
+
 
 class TestBirdsView(TestCase):
 
@@ -98,6 +101,58 @@ class TestBirdsView(TestCase):
         get_birds = BirdsView().get(Request(http_request))
         self.assertEqual(self.all_birds[1:3], get_birds.data)
 
-    @patch('birdsmanager.serializers.BirdsSerializer.save', side_effect = mock_save)
+    @patch('birdsmanager.serializers.BirdsSerializer.save', side_effect=mock_save)
     def test_post(self, MockBirdsSerializer):
-        self.fail()
+        request = Request(HttpRequest())
+        request._full_data = {"name": "A", "color": "red", "species": "sparrow", "body_length": 2, "wingspan": 5}
+        response = BirdsView().post(request)
+        self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
+
+    @patch('birdsmanager.serializers.BirdsSerializer.save', side_effect=mock_save)
+    def test_post_without_name(self, MockBirdsSerializer):
+        request = Request(HttpRequest())
+        request._full_data = {"color": "red", "species": "sparrow", "body_length": 2, "wingspan": 5}
+        response = BirdsView().post(request)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    @patch('birdsmanager.serializers.BirdsSerializer.save', side_effect=mock_save)
+    def test_post_without_color(self, MockBirdsSerializer):
+        request = Request(HttpRequest())
+        request._full_data = {"name": "A", "species": "sparrow", "body_length": 2, "wingspan": 5}
+        response = BirdsView().post(request)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    @patch('birdsmanager.serializers.BirdsSerializer.save', side_effect=mock_save)
+    def test_post_without_species(self, MockBirdsSerializer):
+        request = Request(HttpRequest())
+        request._full_data = {"name": "A", "color": "red", "body_length": 2, "wingspan": 5}
+        response = BirdsView().post(request)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    @patch('birdsmanager.serializers.BirdsSerializer.save', side_effect=mock_save)
+    def test_post_without_body_length(self, MockBirdsSerializer):
+        request = Request(HttpRequest())
+        request._full_data = {"name": "A", "color": "red", "species": "sparrow", "wingspan": 5}
+        response = BirdsView().post(request)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    @patch('birdsmanager.serializers.BirdsSerializer.save', side_effect=mock_save)
+    def test_post_without_wingspan(self, MockBirdsSerializer):
+        request = Request(HttpRequest())
+        request._full_data = {"name": "A", "color": "red", "species": "sparrow", "body_length": 2}
+        response = BirdsView().post(request)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    @patch('birdsmanager.serializers.BirdsSerializer.save', side_effect=mock_save)
+    def test_post_with_negative_body_length(self, MockBirdsSerializer):
+        request = Request(HttpRequest())
+        request._full_data = {"name": "A", "color": "red", "species": "sparrow", "body_length": -2, "wingspan": 5}
+        response = BirdsView().post(request)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    @patch('birdsmanager.serializers.BirdsSerializer.save', side_effect=mock_save)
+    def test_post_with_negative_wingspan(self, MockBirdsSerializer):
+        request = Request(HttpRequest())
+        request._full_data = {"name": "A", "color": "red", "species": "sparrow", "body_length": 2, "wingspan": -5}
+        response = BirdsView().post(request)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
