@@ -41,7 +41,7 @@ class BirdsView(APIView):
                 if new_bird['wingspan'] < 0:
                     return Response('Invalid wingspan', status=status.HTTP_400_BAD_REQUEST)
                 serializer.save()
-                return Response(status=status.HTTP_204_NO_CONTENT)
+                return Response(status=status.HTTP_201_CREATED)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as ex:
